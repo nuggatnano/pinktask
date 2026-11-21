@@ -1,16 +1,16 @@
 /* PinkTask service worker. Naikkan CACHE_VERSION setiap kali mengubah CSS/JS/HTML. */
-var CACHE_VERSION = 'pinktask-v1';
+var CACHE_VERSION = 'pinktask-v2';
 var APP_SHELL = [
   './',
   './index.html',
   './pinktask.html',
-  './css/app.css',
-  './js/store.js',
-  './js/app.js',
+  './app.css',
+  './store.js',
+  './app.js',
   './manifest.json',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/icon-maskable-512.png'
+  './icon-192.png',
+  './icon-512.png',
+  './icon-maskable-512.png'
 ];
 
 self.addEventListener('install', function (event) {
