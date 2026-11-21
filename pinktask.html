@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FCE5EF">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PinkTask">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>PinkTask — Admin Productivity Manager</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 10h18M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M15 3v4h4M9 12h7M9 16h7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 15a1.6 1.6 0 00.3 1.8l.1.1-2.1 2.1-.1-.1a1.6 1.6 0 00-1.8-.3 1.6 1.6 0 00-1 1.5v.2h-3v-.2a1.6 1.6 0 00-1-1.5 1.6 1.6 0 00-1.8.3l-.1.1L6.8 17l.1-.1a1.6 1.6 0 00.3-1.8 1.6 1.6 0 00-1.5-1H5v-3h.2a1.6 1.6 0 001.5-1 1.6 1.6 0 00-.3-1.8L6.3 8l2.1-2.1.1.1a1.6 1.6 0 001.8.3 1.6 1.6 0 001-1.5V4.6h3v.2a1.6 1.6 0 001 1.5 1.6 1.6 0 001.8-.3l.1-.1L19.2 8l-.1.1a1.6 1.6 0 00-.3 1.8 1.6 1.6 0 001.5 1h.2v3h-.2a1.6 1.6 0 00-1.4 1z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4l11-11-4-4L4 16v4zM14 6l4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5M14 11v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 16l4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4m0 1h11l-2 4 2 4H5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M12 3H4v8l9 9 8-8-9-9z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="8" cy="8" r="1.4" fill="currentColor"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-4-4l4 4 4-4M4 19h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4m-4 4l4-4 4 4M4 19h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 019.5 4 8.5 8.5 0 1020 14.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v5M12 8h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.5.5l2-2A5 5 0 0012.5 4l-1 1M14 11a5 5 0 00-7.5-.5l-2 2A5 5 0 0011.5 20l1-1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-8-4.6-8-10a4.5 4.5 0 018-2.8A4.5 4.5 0 0120 10c0 5.4-8 10-8 10z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="i-empty" viewBox="0 0 96 96"><rect x="18" y="22" width="60" height="56" rx="12" fill="#FCE5EF"/><rect x="26" y="32" width="34" height="5" rx="2.5" fill="#EFA7C5"/><rect x="26" y="43" width="44" height="5" rx="2.5" fill="#EFA7C5"/><rect x="26" y="54" width="26" height="5" rx="2.5" fill="#EFA7C5"/><circle cx="68" cy="68" r="18" fill="#C75D8D"/><path d="M60 68l5 5 10-11" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
+<div class="shell">
+
+  <!-- HOME -->
+  <section class="page active" id="page-home">
+    <div class="topbar">
+      <div class="greeting"><div class="hello" id="hello">Halo, Admin 👋</div><h1>Beranda</h1></div>
+      <div class="avatar">PT</div>
+    </div>
+    <div class="page-content">
+    <div class="hero">
+      <h2 id="hero-title">Selamat datang kembali</h2>
+      <p id="hero-date">—</p>
+      <div class="hero-row">
+        <div><div class="hero-num"><span id="hero-percent">0</span><small>%</small></div><p>pekerjaan selesai</p></div>
+        <div style="text-align:right"><div class="hero-num" id="hero-done">0<small>/0</small></div><p>tugas beres</p></div>
+      </div>
+      <div class="bar"><span id="hero-bar" style="width:0"></span></div>
+    </div>
+    <div class="metrics" id="metrics"></div>
+    <div class="section">
+      <div class="section-head"><h3>Tugas Hari Ini</h3><span class="link" id="home-today-count"></span></div>
+      <div class="stack" id="home-today"></div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Deadline Terdekat</h3><span class="link">7 hari ke depan</span></div>
+      <div class="stack" id="home-upcoming"></div>
+    </div>
+    </div>
+  </section>
+
+  <!-- CALENDAR -->
+  <section class="page" id="page-calendar">
+    <div class="topbar">
+      <div class="greeting"><div class="hello">Jadwal kerja</div><h1>Kalender</h1></div>
+      <button class="icon-btn" id="cal-today" aria-label="Kembali ke hari ini"><svg><use href="#i-calendar" xlink:href="#i-calendar"/></svg></button>
+    </div>
+    <div class="page-content">
+    <div class="month-head">
+      <div><h2 id="cal-title">—</h2><p id="cal-sub">—</p></div>
+      <div class="nav-pair">
+        <button id="cal-prev" aria-label="Bulan sebelumnya"><svg><use href="#i-left" xlink:href="#i-left"/></svg></button>
+        <button id="cal-next" aria-label="Bulan berikutnya"><svg><use href="#i-right" xlink:href="#i-right"/></svg></button>
+      </div>
+    </div>
+    <div class="calendar">
+      <div class="weekdays"><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span><span>Min</span></div>
+      <div class="days" id="cal-days"></div>
+    </div>
+    <div class="day-caption" id="cal-caption">—</div>
+    <div class="section" style="padding-top:0"><div class="stack" id="cal-tasks"></div></div>
+    </div>
+  </section>
+
+  <!-- NOTES -->
+  <section class="page" id="page-notes">
+    <div class="topbar">
+      <div class="greeting"><div class="hello">Jurnal harian</div><h1>Catatan</h1></div>
+      <div class="avatar">PT</div>
+    </div>
+    <div class="page-content">
+    <div class="search"><svg><use href="#i-search" xlink:href="#i-search"/></svg>
+      <input id="note-search" type="search" placeholder="Cari catatan..."></div>
+    <div class="filters" id="note-filters"></div>
+    <div class="section" style="padding-top:0"><div class="stack" id="note-list"></div></div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="page" id="page-stats">
+    <div class="topbar">
+      <div class="greeting"><div class="hello">Wawasan kerja</div><h1>Statistik</h1></div>
+      <div class="avatar">PT</div>
+    </div>
+    <div class="page-content">
+    <div class="section">
+      <div class="section-head"><h3>Produktivitas</h3>
+        <div class="segment" id="stat-period" style="max-width:170px">
+          <button data-period="week" class="active">Minggu</button><button data-period="month">Bulan</button>
+        </div>
+      </div>
+      <div class="card" id="stat-summary"></div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Grafik Penyelesaian</h3></div>
+      <div class="card"><div class="chart" id="stat-chart"></div><div class="legend"><span><i style="background:#EFA7C5"></i> Selesai</span><span><i style="background:#F2DAE5"></i> Dibuat</span></div></div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Kategori Teratas</h3></div>
+      <div class="card" id="stat-categories"></div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Rekap Bulan Ini</h3></div>
+      <div class="card" id="stat-month"></div>
+    </div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="page" id="page-settings">
+    <div class="topbar">
+      <div class="greeting"><div class="hello">Preferensi aplikasi</div><h1>Pengaturan</h1></div>
+    </div>
+    <div class="page-content">
+    <div class="section" style="padding-top:0">
+      <div class="card" style="margin-bottom:10px">
+        <label class="lbl">Nama pengguna</label>
+        <div style="display:flex;gap:8px">
+          <input class="field" id="name-input" placeholder="Nama kamu" maxlength="30" autocomplete="off">
+          <button class="btn primary" id="name-save" style="flex:0 0 84px">Simpan</button>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:7px">Dipakai untuk sapaan di beranda.</div>
+      </div>
+      <div class="card" style="display:flex;align-items:center;gap:13px">
+        <div class="avatar" style="width:50px;height:50px;border-radius:17px">PT</div>
+        <div><b style="font-size:14px">PinkTask</b><div style="font-size:11.5px;color:var(--muted)">Admin Productivity Manager</div></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Tampilan</h3></div>
+      <div class="list-group"><div class="row">
+        <div class="r-ico"><svg><use href="#i-moon" xlink:href="#i-moon"/></svg></div>
+        <div class="r-body"><b>Mode gelap</b><span>Nyaman dipakai malam hari</span></div>
+        <div class="switch" id="theme-switch"></div>
+      </div></div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Notifikasi</h3></div>
+      <div class="list-group">
+        <div class="row"><div class="r-ico"><svg><use href="#i-bell" xlink:href="#i-bell"/></svg></div>
+          <div class="r-body"><b>Pengingat aktif</b><span>Notifikasi lokal tanpa internet</span></div>
+          <div class="switch on" id="notify-switch"></div></div>
+        <div class="row" id="permission-row"><div class="r-ico"><svg><use href="#i-info" xlink:href="#i-info"/></svg></div>
+          <div class="r-body"><b>Izin notifikasi</b><span id="permission-text">Diperlukan Android 13+</span></div>
+          <button class="r-val" id="ask-permission">Izinkan</button></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3>Data &amp; Cadangan</h3></div>
+      <div class="list-group">
+        <div class="row" id="backup-row"><div class="r-ico"><svg><use href="#i-download" xlink:href="#i-download"/></svg></div>
+          <div class="r-body"><b>Backup data</b><span id="backup-info">Simpan salinan ke perangkat</span></div></div>
+        <div class="row" id="restore-row"><div class="r-ico"><svg><use href="#i-upload" xlink:href="#i-upload"/></svg></div>
+          <div class="r-body"><b>Restore data</b><span>Pulihkan dari file backup</span></div></div>
+        <div class="row" id="export-row"><div class="r-ico"><svg><use href="#i-download" xlink:href="#i-download"/></svg></div>
+          <div class="r-body"><b>Ekspor tugas</b><span>File CSV untuk spreadsheet</span></div></div>
+        <div class="row" id="clear-row"><div class="r-ico"><svg><use href="#i-trash" xlink:href="#i-trash"/></svg></div>
+          <div class="r-body"><b>Hapus semua data</b><span>Tidak bisa dibatalkan</span></div></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="card" style="text-align:center;color:var(--muted);font-size:11.5px">
+        <div style="color:var(--accent)"><svg style="width:26px;height:26px;margin:0 auto 6px"><use href="#i-heart" xlink:href="#i-heart"/></svg></div>
+        PinkTask v1.0 · Stay organized, get things done.
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <button class="fab" id="fab" aria-label="Tambah tugas"><svg><use href="#i-plus" xlink:href="#i-plus"/></svg></button>
+  <nav class="bottom-nav" id="bottom-nav">
+    <button class="nav-item active" data-page="home"><span class="nav-ico"><svg><use href="#i-home" xlink:href="#i-home"/></svg></span>Beranda</button>
+    <button class="nav-item" data-page="calendar"><span class="nav-ico"><svg><use href="#i-calendar" xlink:href="#i-calendar"/></svg></span>Kalender</button>
+    <button class="nav-item" data-page="notes"><span class="nav-ico"><svg><use href="#i-note" xlink:href="#i-note"/></svg></span>Catatan</button>
+    <button class="nav-item" data-page="stats"><span class="nav-ico"><svg><use href="#i-chart" xlink:href="#i-chart"/></svg></span>Statistik</button>
+    <button class="nav-item" data-page="settings"><span class="nav-ico"><svg><use href="#i-settings" xlink:href="#i-settings"/></svg></span>Setelan</button>
+  </nav>
+</div>
+
+<div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="js/store.js"></script>
+<script src="js/app.js"></script>
+<script>
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}
+</script>
+</body>
+</html>
