@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Asal-usul Kopi 3D</title>
+<style>
+:root{--bg:#f4ece0;--fg:#2b1a0a;--bar:#d9c3a0;--acc:#ea5806;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d140b;--fg:#f3e6d2;--bar:#4a3720}}
+:root[data-theme="dark"]{--bg:#1d140b;--fg:#f3e6d2;--bar:#4a3720}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:Poppins,system-ui,sans-serif}
+body{display:flex;flex-direction:column;align-items:center;gap:10px;padding:12px}
+.wrap{container-type:inline-size;position:relative;width:min(100%,calc((100vh - 180px)*9/16));aspect-ratio:9/16;border-radius:12px;overflow:hidden;background:#000}
+canvas{width:100%;height:100%;display:block}
+#tint{position:absolute;inset:0;background:rgba(233,178,48,.3);opacity:0;pointer-events:none}
+#cap{position:absolute;left:0;right:0;top:65%;transform:translateY(-50%);text-align:center;color:#fff;font:700 26px Poppins,Arial,sans-serif;font-size:7cqw;text-shadow:0 2px 10px rgba(0,0,0,.6);pointer-events:none}
+.bar{width:min(100%,360px);height:6px;background:var(--bar);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--acc)}
+.btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+button{font:600 15px system-ui;padding:10px 22px;border:0;border-radius:24px;background:var(--acc);color:#fff;cursor:pointer}
+button.sec{background:transparent;color:var(--fg);border:2px solid var(--acc)}
+button:disabled{opacity:.5;cursor:not-allowed}
+#st{font-size:13px;opacity:.85;text-align:center;min-height:18px}
+#dl{display:none;font:600 14px system-ui;padding:9px 20px;border-radius:24px;background:#2a8a44;color:#fff;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap"><canvas id="c"></canvas><div id="tint"></div><div id="cap"></div></div>
+<div class="bar"><i id="p"></i></div>
+<div class="btns">
+  <button id="b">▶ Putar</button>
+  <button id="exp" class="sec">⬇ Export Video</button>
+</div>
+<div id="st"></div>
+<a id="dl">💾 Simpan File Video</a>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.0.6/build/mp4-muxer.js"></script>
+<script>
+if(typeof THREE==='undefined')document.getElementById('b').textContent='3D gagal dimuat, cek internet';
+const W=720,H=1280,TAU=Math.PI*2,V=(a,b,c)=>new THREE.Vector3(a,b,c);
+const cv=document.getElementById('c');
+const R=new THREE.WebGLRenderer({canvas:cv,antialias:true,preserveDrawingBuffer:true});
+R.setPixelRatio(1);R.setSize(W,H,false);R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;
+const sc=new THREE.Scene();sc.background=new THREE.Color('#ecc994');sc.fog=new THREE.Fog('#ecc994',20,50);
+const cam=new THREE.PerspectiveCamera(40,W/H,.1,100);
+sc.add(new THREE.HemisphereLight('#fff1d0','#8a5a2e',.55));
+const sun=new THREE.DirectionalLight('#ffe2b0',.85);sun.position.set(-4,7,6);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);
+const sh=sun.shadow.camera;sh.left=-9;sh.right=9;sh.top=9;sh.bottom=-9;sh.far=30;sun.shadow.radius=4;sun.shadow.bias=-.0004;sun.shadow.normalBias=.02;sc.add(sun);
+
+function tex(w,h,fn,rx,ry){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx||1,ry||1);return t}
+const woodT=tex(256,256,(x,w,h)=>{x.fillStyle='#8d4a12';x.fillRect(0,0,w,h);for(let i=0;i<60;i++){x.strokeStyle='rgba('+(40+i%30)+',20,0,'+(.15+.05*(i%4))+')';x.lineWidth=1+i%3;x.beginPath();const y0=i*h/60;x.moveTo(0,y0);for(let k=0;k<=w;k+=16)x.lineTo(k,y0+Math.sin(k/40+i)*5);x.stroke()}},2,2);
+const sandT=tex(256,256,(x,w,h)=>{x.fillStyle='#b08a58';x.fillRect(0,0,w,h);for(let i=0;i<5000;i++){x.fillStyle=i%2?'rgba(255,240,200,.14)':'rgba(90,60,30,.12)';x.fillRect(Math.random()*w,Math.random()*h,2,2)}},14,14);
+const stripeT=tex(128,64,(x,w,h)=>{for(let i=0;i<8;i++){x.fillStyle=i%2?'#fff':'#c4231c';x.fillRect(i*16,0,16,h)}},3,1);
+const starT=tex(64,64,x=>{x.fillStyle='#fff6c8';x.beginPath();for(let i=0;i<8;i++){const a=i*Math.PI/4,d=i%2?5:30;x.lineTo(32+Math.cos(a)*d,32+Math.sin(a)*d)}x.fill()});
+const L=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.7},o||{}));
+const BK=()=>new THREE.MeshBasicMaterial({color:0});
+function M(geo,mat,x,y,z,p){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);if(p)p.add(m);return m}
+
+const G={};['stall','far','biara','kal','mon','goat','fire','berries','beans','bean','mortar','cup','crowd','aroma','spark','ring'].forEach(n=>{G[n]=new THREE.Group();sc.add(G[n])});
+const floor=M(new THREE.PlaneGeometry(90,90),L('#fff',{map:sandT,roughness:.95}),0,0,0,sc);floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;
+
+// set lapak
+M(new THREE.BoxGeometry(14,6,.3),L('#fff',{map:woodT}),0,3,-3,G.stall);
+M(new THREE.BoxGeometry(14,.15,.8),L('#fff',{map:woodT}),0,2.3,-2.6,G.stall);
+[0xc4231c,0xea5806,0xe9b230,0x4f9a2e,0xc4231c,0xea5806,0xe9b230,0x4f9a2e,0x2c4fa0].forEach((c,i)=>M(new THREE.SphereGeometry(.32,24,16),L(c,{roughness:.4}),-5.2+i*1.3,2.7,-2.6,G.stall));
+M(new THREE.BoxGeometry(14,1.1,1.6),L('#fff',{map:woodT}),0,.55,-1.7,G.stall);
+const aw=M(new THREE.BoxGeometry(14,.1,2.4),L('#fff',{map:stripeT}),0,4.9,-2,G.stall);aw.rotation.x=.25;
+[-3.8,3.8].forEach(x=>M(new THREE.BoxGeometry(.3,5,.3),L('#6a3a10'),x,2.5,-2.2,G.stall));
+
+// alam luar
+[[-14,-26],[0,-30],[14,-26],[-26,-18],[26,-18],[7,-24]].forEach(([x,z],i)=>M(new THREE.ConeGeometry(8+i%3*2,7+i%2*3,5),L(i%2?'#7c8f4a':'#9a7a44'),x,3.5,z,G.far));
+M(new THREE.BoxGeometry(6,3.5,3),L('#f0dcb0'),0,1.75,-14,G.biara);
+M(new THREE.SphereGeometry(2,24,12,0,TAU,0,Math.PI/2),L('#4f9a2e',{roughness:.4}),0,3.5,-14,G.biara);
+M(new THREE.BoxGeometry(1,1.8,.2),L('#582702'),0,.9,-12.45,G.biara);
+
+// karakter
+function limb(g,a,b,r){const A=V(...a),B=V(...b);const m=new THREE.Mesh(new THREE.CylinderGeometry(r||.03,r||.03,A.distanceTo(B),6),BK());m.position.copy(A).add(B).multiplyScalar(.5);m.quaternion.setFromUnitVectors(V(0,1,0),B.clone().sub(A).normalize());g.add(m)}
+function mk(g,shirt,hat){const skin=L('#f3dcc0',{roughness:.6}),ob=new THREE.MeshBasicMaterial({color:0,side:THREE.BackSide});
+const head=M(new THREE.SphereGeometry(.5,32,24),skin,0,1.9,0,g);M(head.geometry,ob,0,1.9,0,g).scale.setScalar(1.07);
+const body=M(new THREE.SphereGeometry(.5,24,16),L(shirt),0,.95,0,g);body.scale.set(.85,1.1,.7);M(body.geometry,ob,0,.95,0,g).scale.set(.92,1.18,.77);
+limb(g,[-.4,1.2,0],[-.8,.65,.1]);limb(g,[.4,1.2,0],[.8,.65,.1]);limb(g,[-.2,.45,0],[-.25,0,0]);limb(g,[.2,.45,0],[.25,0,0]);
+const f={skin,m:{}};f.eL=M(new THREE.SphereGeometry(.05,10,8),BK(),-.17,1.95,.47,g);f.eR=M(new THREE.SphereGeometry(.05,10,8),BK(),.17,1.95,.47,g);
+f.bL=M(new THREE.BoxGeometry(.2,.035,.03),BK(),-.17,2.12,.38,g);f.bR=M(new THREE.BoxGeometry(.2,.035,.03),BK(),.17,2.12,.38,g);
+f.m.smile=M(new THREE.TorusGeometry(.13,.025,8,20,Math.PI),BK(),0,1.9,.47,g);f.m.smile.rotation.z=Math.PI;
+f.m.open=M(new THREE.SphereGeometry(.11,16,12),L('#5a1010'),0,1.78,.44,g);f.m.open.scale.set(1.4,1,.5);
+f.m.o=M(new THREE.SphereGeometry(.07,12,10),L('#5a1010'),0,1.78,.46,g);f.m.o.scale.set(1,1.3,.5);
+f.m.flat=M(new THREE.BoxGeometry(.16,.03,.03),BK(),0,1.78,.48,g);
+if(hat==='teal'){const c=M(new THREE.SphereGeometry(.5,24,12,0,TAU,0,Math.PI/2),L('#2a8a8f'),0,2.3,0,g);c.scale.y=.6;M(new THREE.CylinderGeometry(.56,.56,.04,24),L('#2a8a8f'),0,2.3,0,g);
+M(new THREE.SphereGeometry(.07,8,6),L('#2b1a0a'),-.1,1.84,.49,g).scale.set(1.6,.5,.5);M(new THREE.SphereGeometry(.07,8,6),L('#2b1a0a'),.1,1.84,.49,g).scale.set(1.6,.5,.5)}
+if(hat==='peci')M(new THREE.CylinderGeometry(.3,.33,.3,20),L('#111'),0,2.42,0,g);
+g.userData.f=f}
+function face(c,o){const f=c.userData.f,w=o.eyes==='wide',h=o.eyes==='half';f.eL.scale.set(w?1.5:h?1.6:1,w?1.5:h?.25:1,1);f.eR.scale.copy(f.eL.scale);
+const b=o.brow||'flat',a=b==='angry'?.45:0,y=b==='up'?2.2:b==='angry'?2.08:2.12;f.bL.rotation.z=-a;f.bR.rotation.z=a;f.bL.position.y=f.bR.position.y=y;
+for(const k in f.m)f.m[k].visible=k===(o.mouth||'flat');f.skin.color.set(o.blush?'#f2b3a0':'#f3dcc0')}
+mk(G.kal,'#ea5806','teal');mk(G.mon,'#114c69','peci');
+
+// kambing
+(()=>{const g=G.goat,w=L('#fff4e0');const b=M(new THREE.SphereGeometry(.6,20,14),w,0,.9,0,g);b.scale.set(1.3,.75,.8);M(new THREE.SphereGeometry(.32,16,12),w,.85,1.25,0,g);
+[-.15,.15].forEach(z=>M(new THREE.ConeGeometry(.06,.3,6),L('#3a2a1a'),.9,1.6,z,g));
+[[-.5,.3],[-.5,-.3],[.5,.3],[.5,-.3]].forEach(([x,z])=>M(new THREE.CylinderGeometry(.06,.06,.7,6),L('#3a2a1a'),x,.35,z,g))})();
+
+// api
+const fl=new THREE.PointLight('#ff8a30',1.6,9);fl.position.set(0,.8,.5);G.fire.add(fl);
+const prof=[[0,0],[.5,.05],[.62,.35],[.5,.8],[.3,1.25],[.12,1.6],[0,1.9]].map(([r,y])=>new THREE.Vector2(r,y));
+[[1,0xc4231c,0,0],[.72,0xea5806,.04,.22],[.45,0xffd040,.08,.4]].forEach(([k,c,dy,z],i)=>{const m=M(new THREE.LatheGeometry(prof,16),new THREE.MeshBasicMaterial({color:c,side:THREE.DoubleSide}),0,.2+dy,z,G.fire);m.scale.set(k,k,k);m.userData.k=k;m.name='fl'+i});
+M(new THREE.CylinderGeometry(.95,1,.08,16),L('#2a1206'),0,.04,0,G.fire);M(new THREE.CircleGeometry(.7,20),new THREE.MeshBasicMaterial({color:0xff6a10}),0,.09,0,G.fire).rotation.x=-Math.PI/2;
+[0,1].forEach(i=>{const m=M(new THREE.CylinderGeometry(.14,.14,1.8,8),L('#3a1c08'),0,.18,0,G.fire);m.rotation.z=Math.PI/2;m.rotation.y=i*1.2});
+
+// biji
+const beanMat=[];for(let i=0;i<3;i++){const m=L('#b0763a');beanMat.push(m);const b=M(new THREE.SphereGeometry(.28,16,12),m,(i-1)*.7,.3,.6,G.beans);b.scale.set(1,.7,.65);b.rotation.y=i;M(new THREE.BoxGeometry(.5,.03,.04),L('#2b1a0a'),(i-1)*.7,.49,.6,G.beans).rotation.y=i}
+const bm=L('#b0763a');const bb=M(new THREE.SphereGeometry(.28,16,12),bm,0,0,0,G.bean);bb.scale.set(1,.7,.65);
+const rg=M(new THREE.TorusGeometry(1.5,.04,8,40),new THREE.MeshBasicMaterial({color:0xffb020}),0,.45,0,G.ring);rg.rotation.x=Math.PI/2;
+function dark(d){const c=new THREE.Color().setHSL(.07,.65-.2*d,.5-.33*d);beanMat.forEach(m=>m.color.copy(c));bm.color.copy(c)}
+
+// buah
+const bk=L('#5a3010',{roughness:.9});
+function br(a,b,r){const A=V(...a),B=V(...b);const m=new THREE.Mesh(new THREE.CylinderGeometry(r*.7,r,A.distanceTo(B),8),bk);m.position.copy(A).add(B).multiplyScalar(.5);m.quaternion.setFromUnitVectors(V(0,1,0),B.clone().sub(A).normalize());G.berries.add(m)}
+M(new THREE.ConeGeometry(.45,.5,10),bk,0,.2,0,G.berries);br([0,0,0],[0,1.4,0],.2);br([0,1.2,0],[.1,2.1,0],.14);
+[[-.8,2.2,.1],[.8,2.3,-.1],[-.45,2.9,.2],[.45,3.0,0],[0,3.4,.1],[-1,1.7,.3],[.95,1.6,.2]].forEach((e,i)=>{br([0,1.1+i%3*.3,0],e,.07);
+for(let k=0;k<9;k++){const a=k*2.4+i,l=M(new THREE.SphereGeometry(.3,10,8),L(k%3?'#2f7a2a':'#3e9034',{roughness:.45}),e[0]+Math.cos(a)*.45,e[1]+Math.sin(a*1.3)*.3+.1,e[2]+Math.sin(a)*.25,G.berries);l.scale.set(1,.12,.38);l.rotation.set(Math.sin(a)*.4,a,Math.cos(a)*.5)}
+for(let k=0;k<4;k++){const a=k*1.7+i*2,c=(i+k)%5===0?'#e9b230':'#c4231c';M(new THREE.SphereGeometry(.14,14,10),L(c,{roughness:.3}),e[0]+Math.cos(a)*.3,e[1]-.2-.06*k,e[2]+.15+Math.sin(a)*.15,G.berries)}});
+
+// lesung
+M(new THREE.CylinderGeometry(.9,.55,.8,24),L('#8a8a86'),0,.4,0,G.mortar);M(new THREE.CylinderGeometry(.7,.7,.04,24),L('#2b1a0a'),0,.81,0,G.mortar);
+const pest=M(new THREE.CylinderGeometry(.1,.14,1.6,10),L('#c9a36a'),0,1.2,0,G.mortar);
+
+// cangkir
+M(new THREE.CylinderGeometry(.6,.45,.9,28),L('#f7efe0',{roughness:.3}),0,.45,0,G.cup);M(new THREE.CircleGeometry(.52,24),L('#4a2410',{roughness:.2}),0,.91,0,G.cup).rotation.x=-Math.PI/2;
+M(new THREE.TorusGeometry(.25,.06,8,16),L('#f7efe0'),.7,.5,0,G.cup);
+const steam=[];for(let i=0;i<7;i++)steam.push(M(new THREE.SphereGeometry(.14,10,8),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.5}),0,1,0,G.cup));
+const halo=M(new THREE.SphereGeometry(1.1,20,14),new THREE.MeshBasicMaterial({color:0xffd060,transparent:true,opacity:.25}),0,.6,0,G.cup);halo.name='halo';
+
+// aroma, kilau, kerumunan
+const aro=[];for(let i=0;i<36;i++)aro.push(M(new THREE.SphereGeometry(.07,8,6),new THREE.MeshBasicMaterial({color:0xffd060,transparent:true}),0,0,0,G.aroma));
+const spk=[];for(let i=0;i<8;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:starT,fog:false}));G.spark.add(s);spk.push(s)}
+const crowd=[];['#c4231c','#2c4fa0','#4f9a2e','#e9b230','#ea5806'].forEach((c,j)=>{for(let i=0;i<4;i++){const g=new THREE.Group();mk(g,c,i%2?'peci':'teal');g.position.set(-3.2+(j*4+i)%7*1.05+(i%2)*.3,0,-1+Math.floor((j*4+i)/7)*1.6);face(g,{brow:'up',mouth:'open'});G.crowd.add(g);crowd.push(g)}});
+sc.traverse(o=>{if(o.isMesh&&o.material.type==='MeshStandardMaterial'){o.castShadow=true;o.receiveShadow=true}});
+G.stall.traverse(o=>{if(o.isMesh)o.receiveShadow=true});
+function sparkAt(cx,cy,cz,r,t){spk.forEach((s,i)=>{s.position.set(cx+Math.cos(i*2.4)*r,cy+Math.sin(i*1.7)*r*.8,cz);const k=.3+.25*Math.abs(Math.sin(t*5+i));s.scale.set(k,k,1)})}
+
+// shot list
+const S=[];const sh_=(a,b,text,cam,look,show,fn)=>S.push({a,b,text,cam,look,show,fn});
+const ST=['stall'];
+sh_(0,1.8,'Konon, seorang penggembala',[0,8,12],[0,1,-4],['far','biara','kal','goat'],()=>{G.kal.position.set(.9,0,1);G.kal.scale.setScalar(1);face(G.kal,{mouth:'smile'});G.goat.position.set(-.6,0,1.3);G.goat.scale.setScalar(1)});
+sh_(1.8,3.4,'menemukan hal aneh.',[0,1.7,4.6],[0,1.6,0],[...ST,'kal'],()=>face(G.kal,{brow:'up',mouth:'flat'}));
+sh_(3.4,5.0,'Kambingnya makan buah merah,',[0,1.9,8.2],[0,1.9,0],['far','berries','spark'],(t)=>sparkAt(0,2.3,.8,1.3,t));
+sh_(5.0,6.6,'lalu menari!',[0,2,10],[0,1.2,0],['far','goat','kal'],(t)=>{G.goat.position.set(-.9,Math.abs(Math.sin(t*7))*.8,0);G.goat.scale.setScalar(1);G.kal.position.set(1,0,0);face(G.kal,{brow:'up',mouth:'o'})});
+sh_(6.6,8.0,'Semalaman nggak tidur.',[0,1.85,4.3],[0,1.75,0],[...ST,'kal'],()=>face(G.kal,{brow:'up',mouth:'o',eyes:'wide'}));
+sh_(8.0,9.6,'Dia bawa ke biara.',[0,5,10],[0,2.2,-14],['far','biara','kal'],(t,u)=>{G.kal.position.set(0,0,-4-u*3);G.kal.rotation.y=Math.PI;G.kal.scale.setScalar(.7);face(G.kal,{mouth:'smile'})});
+sh_(9.6,11.2,'Sang biarawan curiga.',[0,1.7,4.6],[0,1.6,0],[...ST,'mon'],()=>face(G.mon,{brow:'angry',mouth:'flat'}));
+sh_(11.2,12.8,'“Buah setan!”',[0,1.85,4.3],[0,1.75,0],[...ST,'mon'],()=>face(G.mon,{brow:'angry',mouth:'open',blush:1}));
+sh_(12.8,14.2,'Lempar ke api!',[2.5,2.2,6.5],[0,.8,0],[...ST,'fire','bean','spark'],(t,u)=>{G.fire.scale.setScalar(1);G.bean.position.set(-1.3+u*1.3,.4+Math.sin(u*Math.PI)*2.2,.3);G.bean.rotation.z=u*9;sparkAt(G.bean.position.x,G.bean.position.y,.6,.4,t)});
+sh_(14.2,15.3,'Tapi...',[0,1.7,4.6],[0,1.6,0],[...ST,'kal'],()=>face(G.kal,{brow:'flat',mouth:'flat',eyes:'half'}));
+sh_(15.3,16.9,'biji itu mulai berubah,',[-2.2,2.2,5.8],[0,.5,0],[...ST,'fire','beans','ring'],(t,u)=>{G.fire.scale.setScalar(.7);dark(u*.4);G.ring.children[0].scale.setScalar(.65+.03*Math.sin(t*8))});
+sh_(16.9,18.3,'menggelap,',[2.2,1.8,5.4],[0,.6,0],[...ST,'fire','beans','spark'],(t,u)=>{G.fire.scale.setScalar(.7);dark(.4+u*.6);sparkAt(0,.9,.8,1.2,t)});
+sh_(18.3,23.0,'lalu aroma harum menyebar pelan-pelan.',[0,2.2,7],[0,2,0],[...ST,'fire','beans','aroma','ring'],(t)=>{G.fire.scale.setScalar(.8);dark(1);G.ring.children[0].scale.setScalar(.65);aro.forEach((m,i)=>{const q=((t*.4+i/36)%1);m.position.set(Math.sin(q*9+i)*.4+(i%5-2)*.35,.7+q*3.4,.2);m.material.opacity=1-q})});
+sh_(23.0,24.6,'Biarawan kaget.',[0,1.85,4.3],[0,1.75,0],[...ST,'mon'],()=>face(G.mon,{brow:'up',mouth:'o',eyes:'wide'}));
+sh_(24.6,26.2,'Biji digiling,',[1.6,2.8,6],[0,.9,0],[...ST,'mortar'],(t)=>{pest.position.set(Math.sin(t*10)*.15,1.2+Math.abs(Math.sin(t*10))*.3,0)});
+sh_(26.2,27.8,'diseduh air panas,',[2,3.2,7.8],[0,1.3,-1.5],[...ST,'cup'],(t)=>{G.cup.position.set(0,1.1,-1.5);G.cup.scale.setScalar(1);G.cup.getObjectByName('halo').visible=false;steam.forEach((m,i)=>{const q=(t*.5+i/7)%1;m.position.set(Math.sin(q*6+i)*.25,1+q*1.6,0);m.material.opacity=.5*(1-q)})});
+sh_(27.8,29.4,'dan semua jadi melek.',[0,7,14],[0,.8,-2],['far','biara','crowd'],(t)=>{crowd.forEach((g,i)=>g.position.y=Math.abs(Math.sin(t*6+i))*.25)});
+sh_(29.4,31.0,'Itulah kopi.',[-2,3,7.5],[0,1.4,-1.5],[...ST,'cup','spark'],(t)=>{G.cup.position.set(0,1.1,-1.5);G.cup.scale.setScalar(1.2);const h=G.cup.getObjectByName('halo');h.visible=true;h.scale.setScalar(.6+.04*Math.sin(t*6));steam.forEach(m=>m.material.opacity=0);sparkAt(0,2,-.8,1.2,t)});
+sh_(31.0,32.7,'Dari kambing menari.',[0,1.85,4.6],[0,1.7,0],[...ST,'kal','cup'],()=>{face(G.kal,{brow:'up',mouth:'smile',blush:1});G.cup.position.set(.3,.9,.6);G.cup.scale.setScalar(.45);G.cup.getObjectByName('halo').visible=false;steam.forEach(m=>m.material.opacity=0)});
+
+const END=32.7,CAP=[];
+S.forEach(s=>{const w=s.text.split(' '),ch=[];for(let i=0;i<w.length;i+=2)ch.push(w.slice(i,i+2).join(' '));const d=(s.b-s.a)/ch.length;ch.forEach((c,i)=>CAP.push([s.a+i*d,s.a+(i+1)*d,c]))});
+
+const capEl=document.getElementById('cap'),tint=document.getElementById('tint'),bar=document.getElementById('p');
+function frame(T){T=Math.min(T,END-.001);const s=S.find(s=>T>=s.a&&T<s.b)||S[S.length-1];const t=T-s.a,u=t/(s.b-s.a);
+Object.values(G).forEach(g=>g.visible=false);s.show.forEach(n=>G[n].visible=true);
+G.kal.position.set(0,0,0);G.kal.rotation.y=0;G.kal.scale.setScalar(1);G.mon.position.set(0,0,0);G.goat.position.set(0,0,0);G.goat.scale.setScalar(1);G.fire.scale.setScalar(1);G.bean.position.set(0,0,0);G.cup.position.set(0,0,0);G.cup.scale.setScalar(1);
+fl.intensity=1.4+.4*Math.sin(T*25);G.fire.children.forEach(c=>{if(c.name)c.scale.y=(c.userData.k||1)*(1+.12*Math.sin(T*14+c.name.charCodeAt(2)*2))});
+try{s.fn&&s.fn(t,u)}catch(e){console.error(e)}
+const p=s.cam,q=s.look,k=(s.a===18.3?.008:.03)*t;cam.position.set(p[0]+(q[0]-p[0])*k,p[1]+(q[1]-p[1])*k,p[2]+(q[2]-p[2])*k);cam.lookAt(q[0],q[1],q[2]);
+R.render(sc,cam);const c=CAP.find(c=>T>=c[0]&&T<c[1]);capEl.textContent=c?c[2]:'';tint.style.opacity=s.a===27.8?1:0;bar.style.width=(T/END*100)+'%'}
+
+let t0=0,run=false,busy=false,dlUrl=null;
+const bt=document.getElementById('b'),exp=document.getElementById('exp'),st=document.getElementById('st'),dl=document.getElementById('dl');
+
+function loop(n){if(!run)return;const T=(n-t0)/1000;frame(T);if(T>=END){run=false;bt.textContent='↻ Putar ulang';return}requestAnimationFrame(loop)}
+bt.onclick=()=>{if(busy)return;run=true;bt.textContent='Memutar…';t0=performance.now();requestAnimationFrame(loop)};
+frame(0);
+
+// --- Kanvas Gabungan (3D + Tint + Subtitle) untuk Export ---
+const expCv=document.createElement('canvas');expCv.width=W;expCv.height=H;
+const expCtx=expCv.getContext('2d');
+function drawComposite(T){
+  frame(T);
+  expCtx.drawImage(cv,0,0,W,H);
+  if(tint.style.opacity==='1'){
+    expCtx.fillStyle='rgba(233,178,48,0.3)';
+    expCtx.fillRect(0,0,W,H);
+  }
+  const txt=capEl.textContent;
+  if(txt){
+    expCtx.save();
+    expCtx.font='700 50px Poppins, Arial, sans-serif';
+    expCtx.fillStyle='#ffffff';
+    expCtx.textAlign='center';
+    expCtx.textBaseline='middle';
+    expCtx.shadowColor='rgba(0,0,0,0.6)';
+    expCtx.shadowBlur=10;
+    expCtx.shadowOffsetX=0;
+    expCtx.shadowOffsetY=2;
+    expCtx.fillText(txt,W/2,H*0.65,W-48);
+    expCtx.restore();
+  }
+}
+
+function finishBlob(blob,ext){
+  if(dlUrl)URL.revokeObjectURL(dlUrl);
+  dlUrl=URL.createObjectURL(blob);
+  const name='asal-usul-kopi-3d.'+ext;
+  dl.href=dlUrl;dl.download=name;
+  dl.textContent='💾 Simpan Video (.'+ext+')';
+  dl.style.display='inline-block';
+  const a=document.createElement('a');a.href=dlUrl;a.download=name;a.click();
+  st.textContent='Selesai! Jika belum otomatis terunduh, tekan tombol hijau di bawah.';
+}
+
+async function getAvcCodec(fps){
+  if(typeof VideoEncoder==='undefined'||typeof Mp4Muxer==='undefined'||!window.isSecureContext)return null;
+  const list=['avc1.420028','avc1.4d0028','avc1.42001f','avc1.42E01E'];
+  for(const codec of list){
+    try{
+      const res=await VideoEncoder.isConfigSupported({codec,width:W,height:H,bitrate:4_000_000,framerate:fps});
+      if(res&&res.supported)return codec;
+    }catch(_){}
+  }
+  return null;
+}
+
+async function exportWebCodecs(codec,fps){
+  const total=Math.ceil(END*fps);
+  const muxer=new Mp4Muxer.Muxer({
+    target:new Mp4Muxer.ArrayBufferTarget(),
+    video:{codec:'avc',width:W,height:H},
+    fastStart:'in-memory'
+  });
+  let encErr=null;
+  const encoder=new VideoEncoder({
+    output:(chunk,meta)=>muxer.addVideoChunk(chunk,meta),
+    error:(e)=>{encErr=e}
+  });
+  encoder.configure({codec,width:W,height:H,bitrate:4_000_000,framerate:fps});
+
+  for(let f=0;f<total;f++){
+    if(encErr)throw encErr;
+    drawComposite(f/fps);
+    const ts=Math.round(f*1000000/fps),dur=Math.round(1000000/fps);
+    const vf=new VideoFrame(expCv,{timestamp:ts,duration:dur});
+    while(encoder.encodeQueueSize>6)await new Promise(r=>setTimeout(r,10));
+    encoder.encode(vf,{keyFrame:f%(fps*2)===0});
+    vf.close();
+    if(f%3===0){
+      const pct=Math.round(((f+1)/total)*100);
+      st.textContent='Merender MP4… '+pct+'% ('+(f+1)+'/'+total+' frame)';
+      await new Promise(r=>setTimeout(r,0));
+    }
+  }
+  await encoder.flush();
+  if(encErr)throw encErr;
+  muxer.finalize();
+  finishBlob(new Blob([muxer.target.buffer],{type:'video/mp4'}),'mp4');
+}
+
+function exportMediaRecorder(fps){
+  return new Promise((resolve,reject)=>{
+    if(typeof MediaRecorder==='undefined'||!expCv.captureStream){
+      reject(new Error('Browser ini tidak mendukung perekaman kanvas.'));return;
+    }
+    const types=['video/mp4;codecs=avc1.42E01E','video/mp4;codecs=avc1','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
+    const mime=types.find(t=>MediaRecorder.isTypeSupported(t))||'';
+    const ext=mime.includes('mp4')?'mp4':'webm';
+    const stream=expCv.captureStream(fps);
+    const chunks=[];
+    const mr=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:4_000_000}:{videoBitsPerSecond:4_000_000});
+    mr.ondataavailable=e=>{if(e.data&&e.data.size>0)chunks.push(e.data)};
+    mr.onerror=e=>reject(e.error||new Error('Gagal merekam'));
+    mr.onstop=()=>{
+      finishBlob(new Blob(chunks,{type:mime||'video/'+ext}),ext);
+      resolve();
+    };
+    drawComposite(0);
+    mr.start(250);
+    const start=performance.now();
+    function recLoop(now){
+      const T=(now-start)/1000;
+      if(T>=END){
+        drawComposite(END-.001);
+        setTimeout(()=>mr.stop(),120);
+        return;
+      }
+      drawComposite(T);
+      st.textContent='Merekam video ('+ext.toUpperCase()+')… '+Math.min(99,Math.round(T/END*100))+'%';
+      requestAnimationFrame(recLoop);
+    }
+    requestAnimationFrame(recLoop);
+  });
+}
+
+exp.onclick=async()=>{
+  if(busy)return;
+  busy=true;run=false;
+  bt.disabled=true;exp.disabled=true;
+  dl.style.display='none';
+  st.textContent='Menyiapkan encoder…';
+  try{
+    const fps=30;
+    const codec=await getAvcCodec(fps);
+    if(codec){
+      await exportWebCodecs(codec,fps);
+    }else{
+      await exportMediaRecorder(fps);
+    }
+  }catch(e){
+    console.error(e);
+    st.textContent='Gagal export: '+(e.message||e);
+  }finally{
+    busy=false;bt.disabled=false;exp.disabled=false;
+    bt.textContent='▶ Putar';
+  }
+};
+</script>
+</body>
+</html>
